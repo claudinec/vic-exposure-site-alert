@@ -20,4 +20,5 @@ if (r.ok):
             data_json.append(row)
     with open(data_json_file, mode='w') as json_file_writer:
         json.dump(data_json, json_file_writer)
-
+else:
+    print(r.status_code)
