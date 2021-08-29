@@ -6,7 +6,6 @@ from datetime import datetime
 import logging
 import re
 import requests
-import schedule
 
 config_file = 'config.json'
 tier_match = '(Tier\s[0-9])'
@@ -74,8 +73,4 @@ def check_data():
 
     logging.info('All done')
 
-
-schedule.every().hour.at(":05").do(check_data)
-
-while True:
-    schedule.run_pending()
+check_data()
