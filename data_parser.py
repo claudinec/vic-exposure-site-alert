@@ -32,9 +32,7 @@ with open(data_json_file, mode='r') as data_file_reader:
             pushcut_data['title'] = tier_num[0] + ' Covid-19 exposure in ' + suburb_str
             pushcut_text = site['Site_title'] + '\n' + site['Site_streetaddress'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
             pushcut_data['text'] = pushcut_text
-            print(pushcut_data)
             r = requests.post(pushcut_url, json=pushcut_data)
-            print(r.status_code)
 
 with open(last_run_file, mode='w') as last_run_file_writer:
     json.dump(last_run_str, last_run_file_writer)
