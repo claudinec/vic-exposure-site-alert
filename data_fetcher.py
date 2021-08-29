@@ -8,6 +8,7 @@ r = requests.get('https://drive.google.com/uc?export=download&id=1hULHQeuuMQwndv
 
 if (r.ok):
     data_str = r.content.decode()
+    dialect = csv.Sniffer().sniff(data_str)
 
-with open(data_csv, mode='w',newline='\r') as file_writer:
-    print(data_str, file=file_writer)
+# with open(data_csv, mode='w',newline='\r') as file_writer:
+#     print(data_str, file=file_writer)
