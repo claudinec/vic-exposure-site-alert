@@ -2,10 +2,13 @@
 
 import csv
 import json
+from datetime import datetime
 import requests
 
 data_csv_file = 'data/exposure-sites-data.csv'
 data_json_file = 'data/exposure-sites-data.json'
+data_fetched_str = {"data_fetched": datetime.now().isoformat()}
+data_fetched_file = 'data/data_fetched.json'
 
 r = requests.get('https://drive.google.com/uc?export=download&id=1hULHQeuuMQwndvKy1_ScqObgX0NRUv1A', stream=True)
 
@@ -20,5 +23,7 @@ if (r.ok):
             data_json.append(row)
     with open(data_json_file, mode='w') as json_file_writer:
         json.dump(data_json, json_file_writer)
+    with open(data_fetched_file, mode='w') as data_fetched_file_writer:
+        json.dump(data_fetched_str, data_fetched_file_writer)
 else:
     print(r.status_code)
