@@ -36,17 +36,23 @@ def fetch_data(req):
     return data_json
 
 def parse_data(config, date_last_run_dt, data_json):
+    suburbs_list = config['suburbs_list']
     for site in data_json:
         pushcut_data = {}
         suburb_str = site['Suburb']
-        added_dt = datetime.fromisoformat(site['Added_date_dtm'])
-        if (suburb_str in config['suburbs_list'] and added_dt > date_last_run_dt):
+        if (site['Added_time'] != ''):
+            added_str = site['Added_date_dtm'] + 'T' + site['Added_time']
+        else:
+            added_str = site['Added_date_dtm'] + 'T00:00:00'
+        added_dt = datetime.fromisoformat(added_str)
+        if (suburb_str in suburbs_list and added_dt > date_last_run_dt):
             tier_num = re.match(tier_match, site['Advice_title'])
             pushcut_data['title'] = tier_num[0] + ' Covid-19 exposure in ' + suburb_str
             pushcut_text = site['Site_title'] + '\n' + site['Site_streetaddress'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
             pushcut_data['text'] = pushcut_text
             r = requests.post(config['pushcut_url'], json=pushcut_data)
-            logging.info('Alert sent for %(suburb_str)')
+            logging.info('Alert sent:')
+            logging.info(suburb_str)
 
 def check_data():
     # Start logging.
@@ -59,6 +65,8 @@ def check_data():
     with open(date_last_run_file, mode='r') as date_last_run_reader:
         date_last_run = json.load(date_last_run_reader)
         date_last_run_str = date_last_run['date_last_run']
+        logging.debug('Date last run:')
+        logging.debug(date_last_run_str)
         if (date_last_run_str != ''):
             date_last_run_dt = datetime.fromisoformat(date_last_run_str)
 
