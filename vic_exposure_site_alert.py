@@ -20,8 +20,10 @@ DATE_LAST_RUN_FILE = 'data/date_last_run.json'
 def start_log():
     alert_logger = logging.getLogger('alert')
     alert_logger.setLevel(logging.DEBUG)
+    alert_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
     alert_fhandler = logging.handlers.TimedRotatingFileHandler(LOG_FILE, when='midnight', backupCount=28)
-    alert_fhandler.setFormatter('%(asctime)s %(levelname)s %(message)s')
+    alert_fhandler.setFormatter(alert_formatter)
+    alert_logger.addHandler(alert_fhandler)
     return alert_logger
 
 def check_config(logger):
