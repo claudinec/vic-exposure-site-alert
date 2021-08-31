@@ -14,6 +14,10 @@ data_csv_file = 'data/exposure-sites-data.csv'
 data_json_file = 'data/exposure-sites-data.json'
 date_last_run_file = 'data/date_last_run.json'
 
+# Start logging.
+# def start_log():
+#   return logger
+
 def check_config():
     with open(config_file, mode='r') as config_file_reader:
         config = json.load(config_file_reader)
@@ -45,7 +49,7 @@ def parse_data(config, date_last_run_dt, data_json):
         else:
             added_str = site['Added_date_dtm'] + 'T00:00:00'
         added_dt = datetime.fromisoformat(added_str)
-        if (suburb_str in suburbs_list and added_dt > date_last_run_dt):
+        if (suburb_str.strip() in suburbs_list and added_dt > date_last_run_dt):
             tier_num = re.match(tier_match, site['Advice_title'])
             pushcut_data['title'] = tier_num[0] + ' Covid-19 exposure in ' + suburb_str
             pushcut_text = site['Site_title'] + '\n' + site['Site_streetaddress'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
@@ -56,6 +60,7 @@ def parse_data(config, date_last_run_dt, data_json):
 
 def check_data():
     # Start logging.
+    # logger = start_log()
     logging.basicConfig(filename='logs/debug.log', format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
 
     # Get configuration.
