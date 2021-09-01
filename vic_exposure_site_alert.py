@@ -26,13 +26,14 @@ def start_log():
     alert_logger.addHandler(alert_fhandler)
     return alert_logger
 
-def check_config(logger):
+def get_config(logger):
+    url_re = r'https\:\/\/api\.pushcut\.io\/.*\/notifications\/'
     with open(CONFIG_FILE, mode='r') as config_file_reader:
         config = json.load(config_file_reader)
-        if (config['pushcut_url'] == ''):
-            logger.critical('Pushcut URL not set')
-        else:
+        if (re.match(url_re, config['pushcut_url'])):
             return config
+        else:
+            logger.critical('Invalid Pushcut URL')
 
 def fetch_data(req):
     data_json = []
@@ -62,24 +63,27 @@ def parse_data(logger, config, date_last_run_dt, data_json):
             pushcut_data['title'] = tier_num[0] + ' Covid-19 exposure in ' + suburb_str
             pushcut_text = site['Site_title'] + '\n' + site['Site_streetaddress'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
             pushcut_data['text'] = pushcut_text
-            r = requests.post(config['pushcut_url'], json=pushcut_data)
-            logger.info('Alert sent:')
-            logger.info(suburb_str)
+            req = requests.post(config['pushcut_url'], json=pushcut_data)
+            if (req.ok):
+                log_msg = 'Alert sent: '+ suburb_str
+                logger.info(log_msg)
+            else:
+                logger.error(req.status_code)
 
 def check_data():
     # Start logging.
     logger = start_log()
 
     # Get configuration.
-    config = check_config(logger)
+    config = get_config(logger)
 
     # When did we last check the data?
     with open(DATE_LAST_RUN_FILE, mode='r') as date_last_run_reader:
         date_last_run = json.load(date_last_run_reader)
         date_last_run_str = date_last_run['date_last_run']
-        logger.debug('Date last run:')
-        logger.debug(date_last_run_str)
         if (date_last_run_str != ''):
+            log_msg = 'Date last run: ' + date_last_run_str
+            logger.debug(log_msg)
             date_last_run_dt = datetime.fromisoformat(date_last_run_str)
 
     # Fetch the data to be parsed.
@@ -97,7 +101,7 @@ def check_data():
             json.dump(date_now_str, date_last_run_writer)
         logger.info('All done')
     else:
-        logger.error(r.status_code)
+        logger.error(req.status_code)
 
 check_data()
 
