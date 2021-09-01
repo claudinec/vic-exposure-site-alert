@@ -26,6 +26,7 @@ def start_log():
     alert_logger.addHandler(alert_fhandler)
     return alert_logger
 
+# Check configuration.
 def get_config(logger):
     url_re = r'https\:\/\/api\.pushcut\.io\/.*\/notifications\/'
     with open(CONFIG_FILE, mode='r') as config_file_reader:
@@ -35,7 +36,8 @@ def get_config(logger):
         else:
             logger.critical('Invalid Pushcut URL')
 
-def fetch_data(req):
+def parse_data(logger, config, date_last_run_dt, req):
+    suburbs_list = config['suburbs_list']
     data_json = []
     data_str = req.content.decode()
     with open(DATA_CSV_FILE, mode='w',newline='\r') as csv_file_writer:
@@ -46,10 +48,6 @@ def fetch_data(req):
              data_json.append(row)
     with open(DATA_JSON_FILE, mode='w') as json_file_writer:
         json.dump(data_json, json_file_writer)
-    return data_json
-
-def parse_data(logger, config, date_last_run_dt, data_json):
-    suburbs_list = config['suburbs_list']
     for site in data_json:
         pushcut_data = {}
         suburb_str = site['Suburb']
@@ -74,7 +72,7 @@ def check_data():
     # Start logging.
     logger = start_log()
 
-    # Get configuration.
+    # Check configuration.
     config = get_config(logger)
 
     # When did we last check the data?
@@ -86,14 +84,13 @@ def check_data():
             logger.debug(log_msg)
             date_last_run_dt = datetime.fromisoformat(date_last_run_str)
 
-    # Fetch the data to be parsed.
+    # Fetch data from Victorian Government Google Drive.
     logger.info('Fetching data')
     req = requests.get(DATA_URL, stream=True)
     if (req.ok):
-        data_json = fetch_data(req)
         # Parse exposure site data.
         logger.info('Parsing data')
-        parse_data(logger, config, date_last_run_dt, data_json)
+        parse_data(logger, config, date_last_run_dt, req)
         # Update last run date.
         date_now_dt = datetime.now()
         date_now_str = {"date_last_run": date_now_dt.isoformat()}
