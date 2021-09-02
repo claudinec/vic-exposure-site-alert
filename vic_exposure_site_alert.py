@@ -16,6 +16,8 @@ DATA_CSV_FILE = 'data/exposure-sites-data.csv'
 DATA_JSON_FILE = 'data/exposure-sites-data.json'
 DATE_LAST_RUN_FILE = 'data/date_last_run.json'
 
+# TODO mkdir data and logs if they don't exist
+
 # Start logging.
 def start_log():
     alert_logger = logging.getLogger('alert')
@@ -36,10 +38,10 @@ def get_config(logger):
         else:
             logger.critical('Invalid Pushcut URL')
 
-def parse_data(logger, config, date_last_run_dt, req):
+def parse_data(logger, config, date_last_run_dt, data_req):
     suburbs_list = config['suburbs_list']
     data_json = []
-    data_str = req.content.decode()
+    data_str = data_req.content.decode()
     with open(DATA_CSV_FILE, mode='w',newline='\r') as csv_file_writer:
         print(data_str, file=csv_file_writer)
     with open(DATA_CSV_FILE, mode='r',newline='\r') as csv_file_reader:
@@ -61,8 +63,10 @@ def parse_data(logger, config, date_last_run_dt, req):
             pushcut_data['title'] = tier_num[0] + ' Covid-19 exposure in ' + suburb_str
             pushcut_text = site['Site_title'] + '\n' + site['Site_streetaddress'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
             pushcut_data['text'] = pushcut_text
-            req = requests.post(config['pushcut_url'], json=pushcut_data)
-            if (req.ok):
+            if config['pushcut_devices']:
+                pushcut_data['devices'] = config['pushcut_devices']
+            pushcut_req = requests.post(config['pushcut_url'], json=pushcut_data)
+            if (pushcut_req.ok):
                 log_msg = 'Alert sent: '+ suburb_str
                 logger.info(log_msg)
             else:
@@ -86,11 +90,11 @@ def check_data():
 
     # Fetch data from Victorian Government Google Drive.
     logger.info('Fetching data')
-    req = requests.get(DATA_URL, stream=True)
-    if (req.ok):
+    data_req = requests.get(DATA_URL, stream=True)
+    if (data_req.ok):
         # Parse exposure site data.
         logger.info('Parsing data')
-        parse_data(logger, config, date_last_run_dt, req)
+        parse_data(logger, config, date_last_run_dt, data_req)
         # Update last run date.
         date_now_dt = datetime.now()
         date_now_str = {"date_last_run": date_now_dt.isoformat()}
