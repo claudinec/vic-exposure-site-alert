@@ -10,7 +10,7 @@ import requests
 
 CONFIG_FILE = 'config.json'
 LOG_FILE = 'logs/debug.log'
-TIER_MATCH = '(Tier\s[0-9])'
+TIER_RE = r'(Tier\s[0-9])'
 DATA_URL = 'https://drive.google.com/uc?export=download&id=1hULHQeuuMQwndvKy1_ScqObgX0NRUv1A'
 DATA_CSV_FILE = 'data/exposure-sites-data.csv'
 DATA_JSON_FILE = 'data/exposure-sites-data.json'
@@ -59,7 +59,7 @@ def parse_data(logger, config, date_last_run_dt, data_req):
             added_str = site['Added_date_dtm'] + 'T00:00:00'
         added_dt = datetime.fromisoformat(added_str)
         if (suburb_str.strip() in suburbs_list and added_dt > date_last_run_dt):
-            tier_num = re.match(TIER_MATCH, site['Advice_title'])
+            tier_num = re.match(TIER_RE, site['Advice_title'])
             pushcut_data['title'] = tier_num[0] + ' Covid-19 exposure in ' + suburb_str
             pushcut_text = site['Site_title'] + '\n' + site['Site_streetaddress'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
             pushcut_data['text'] = pushcut_text
@@ -70,7 +70,7 @@ def parse_data(logger, config, date_last_run_dt, data_req):
                 log_msg = 'Alert sent: '+ suburb_str
                 logger.info(log_msg)
             else:
-                logger.error(req.status_code)
+                logger.error(pushcut_req.status_code)
 
 def check_data():
     # Start logging.
@@ -102,7 +102,6 @@ def check_data():
             json.dump(date_now_str, date_last_run_writer)
         logger.info('All done')
     else:
-        logger.error(req.status_code)
+        logger.error(data_req.status_code)
 
 check_data()
-
