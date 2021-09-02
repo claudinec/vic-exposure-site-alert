@@ -10,7 +10,9 @@ import requests
 
 CONFIG_FILE = 'config.json'
 LOG_FILE = 'logs/debug.log'
-TIER_RE = r'(Tier\s[0-9])'
+TIER_RE = r'(Tier [0-9])'
+TRAIN_RE = r'Trains? - (?P<train_line>[a-zA-Z]+ Line)'
+TRAM_RE = r'Tram (?:Route )?(?P<tram_route>[0-9]+)'
 DATA_URL = 'https://drive.google.com/uc?export=download&id=1hULHQeuuMQwndvKy1_ScqObgX0NRUv1A'
 DATA_CSV_FILE = 'data/exposure-sites-data.csv'
 DATA_JSON_FILE = 'data/exposure-sites-data.json'
@@ -38,18 +40,11 @@ def get_config(logger):
         else:
             logger.critical('Invalid Pushcut URL')
 
-def parse_data(logger, config, date_last_run_dt, data_req):
-    suburbs_list = config['suburbs_list']
-    data_json = []
-    data_str = data_req.content.decode()
-    with open(DATA_CSV_FILE, mode='w',newline='\r') as csv_file_writer:
-        print(data_str, file=csv_file_writer)
-    with open(DATA_CSV_FILE, mode='r',newline='\r') as csv_file_reader:
-        csv_reader = csv.DictReader(csv_file_reader)
-        for row in csv_reader:
-             data_json.append(row)
-    with open(DATA_JSON_FILE, mode='w') as json_file_writer:
-        json.dump(data_json, json_file_writer)
+def check_suburbs(logger, config, date_last_run_dt, data_json):
+    alert_suburbs = config['alert_suburbs']
+    # Default suburb alert to Melbourne if no suburbs provided.
+    if (alert_suburbs == []):
+        alert_suburbs = ['Melbourne']
     for site in data_json:
         pushcut_data = {}
         suburb_str = site['Suburb']
@@ -58,19 +53,42 @@ def parse_data(logger, config, date_last_run_dt, data_req):
         else:
             added_str = site['Added_date_dtm'] + 'T00:00:00'
         added_dt = datetime.fromisoformat(added_str)
-        if (suburb_str.strip() in suburbs_list and added_dt > date_last_run_dt):
+        if (suburb_str.strip() in alert_suburbs and added_dt > date_last_run_dt):
             tier_num = re.match(TIER_RE, site['Advice_title'])
             pushcut_data['title'] = tier_num[0] + ' Covid-19 exposure in ' + suburb_str
             pushcut_text = site['Site_title'] + '\n' + site['Site_streetaddress'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
             pushcut_data['text'] = pushcut_text
-            if (config['pushcut_devices']):
-                pushcut_data['devices'] = config['pushcut_devices']
-            pushcut_req = requests.post(config['pushcut_url'], json=pushcut_data)
-            if (pushcut_req.ok):
-                log_msg = 'Alert sent: '+ suburb_str
-                logger.info(log_msg)
+            send_alert(logger, config, pushcut_data)
+
+def check_pt(logger, config, date_last_run_dt, data_json):
+    # alert_trains = config['alert_trains']
+    for site in data_json:
+        pushcut_data = {}
+        if (site['Suburb'] == 'Public Transport'):
+            if (site['Added_time'] != ''):
+                added_str = site['Added_date_dtm'] + 'T' + site['Added_time']
             else:
-                logger.error(pushcut_req.status_code)
+                added_str = site['Added_date_dtm'] + 'T00:00:00'
+            added_dt = datetime.fromisoformat(added_str)
+            tram_match = re.match(TRAM_RE, site['Site_title'])
+            if (tram_match):
+                tram_route = int(tram_match['tram_route'])
+                if (tram_route in config['alert_trams'] and added_dt > date_last_run_dt):
+                    tier_num = re.match(TIER_RE, site['Advice_title'])
+                    pushcut_data['title'] = tier_num[0] + 'Covid-19 exposure on tram ' + tram_route
+                    pushcut_text = site['Site_title'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
+                    pushcut_data['text'] = pushcut_text
+                    send_alert(logger, config, pushcut_data)
+
+def send_alert(logger, config, pushcut_data):
+    if (config['pushcut_devices']):
+        pushcut_data['devices'] = config['pushcut_devices']
+    pushcut_req = requests.post(config['pushcut_url'], json=pushcut_data)
+    if (pushcut_req.ok):
+        log_msg = 'Alert sent: ' + pushcut_data['title']
+        logger.info(log_msg)
+    else:
+        logger.error(pushcut_req.status_code)
 
 def check_data():
     # Start logging.
@@ -92,9 +110,24 @@ def check_data():
     logger.info('Fetching data')
     data_req = requests.get(DATA_URL, stream=True)
     if (data_req.ok):
-        # Parse exposure site data.
-        logger.info('Parsing data')
-        parse_data(logger, config, date_last_run_dt, data_req)
+        data_json = []
+        data_str = data_req.content.decode()
+        with open(DATA_CSV_FILE, mode='w',newline='\r') as csv_file_writer:
+            print(data_str, file=csv_file_writer)
+        with open(DATA_CSV_FILE, mode='r',newline='\r') as csv_file_reader:
+            csv_reader = csv.DictReader(csv_file_reader)
+            for row in csv_reader:
+                data_json.append(row)
+        with open(DATA_JSON_FILE, mode='w') as json_file_writer:
+            json.dump(data_json, json_file_writer)
+
+        # Check suburbs.
+        logger.info('Checking suburbs')
+        check_suburbs(logger, config, date_last_run_dt, data_json)
+        # Check public transport.
+        if (config['alert_trains'] != [] or config['alert_trams'] != []):
+            logger.info('Checking public transport')
+            check_pt(logger, config, date_last_run_dt, data_json)
         # Update last run date.
         date_now_dt = datetime.now()
         date_now_str = {"date_last_run": date_now_dt.isoformat()}

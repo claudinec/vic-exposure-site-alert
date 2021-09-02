@@ -6,9 +6,13 @@ This script queries the Victorian Government Covid-19 exposure site data for cho
 
 `config.json` is a [JSON](https://www.json.org/json-en.html) file with the following data.
 
-- `suburbs_list` is a list of suburbs to be queried
-- `pushcut_url` is a string containing the [Pushcut Webhook URL](https://www.pushcut.io/support.html#web_api)
-- `pushcut_devices` is an optional list of device names to receive alerts; if this is missing or blank, all devices on your account will receive alerts
+- Suburbs and (optional) public transport to be queried
+  - `alert_suburbs` is a list of suburbs
+  - `alert_trains` is a list of train lines
+  - `alert_trams` is a list of tram route numbers
+- Pushcut settings
+  - `pushcut_url` is a string containing the [Pushcut Webhook URL](https://www.pushcut.io/support.html#web_api)
+  - `pushcut_devices` is an optional list of device names to receive alerts; if this is missing or blank, all devices on your account will receive alerts
 
 ### Pushcut
 
