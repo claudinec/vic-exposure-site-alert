@@ -10,6 +10,7 @@ import requests
 
 CONFIG_FILE = 'config.json'
 LOG_FILE = 'logs/debug.log'
+BUS_RE = r'Bus (?P<bus_route>[0-9]+)'
 TIER_RE = r'(Tier [0-9])'
 TRAIN_RE = r'Trains? - (?P<train_line>[a-zA-Z]+ Line)'
 TRAM_RE = r'Tram (?:Route )?(?P<tram_route>[0-9]+)'
@@ -70,7 +71,9 @@ def check_pt(logger, config, date_last_run_dt, data_json):
             else:
                 added_str = site['Added_date_dtm'] + 'T00:00:00'
             added_dt = datetime.fromisoformat(added_str)
+            bus_match = re.match(BUS_RE, site['Site_title'])
             tram_match = re.match(TRAM_RE, site['Site_title'])
+            train_match = re.match(TRAIN_RE, site['Site_title'])
             if (tram_match):
                 tram_route = int(tram_match['tram_route'])
                 if (tram_route in config['alert_trams'] and added_dt > date_last_run_dt):

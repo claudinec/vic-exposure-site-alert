@@ -8,9 +8,9 @@ This script queries the Victorian Government Covid-19 exposure site data for cho
 
 - Suburbs and (optional) public transport to be queried
   - `alert_suburbs` is a list of suburbs
+  - `alert_buses` is a list of bus route numbers
   - `alert_trains` is a list of train lines
   - `alert_trams` is a list of tram route numbers
-  - `alert_buses` is a list of bus route numbers
 - Pushcut settings
   - `pushcut_url` is a string containing the [Pushcut Webhook URL](https://www.pushcut.io/support.html#web_api)
   - `pushcut_devices` is an optional list of device names to receive alerts; if this is missing or blank, all devices on your account will receive alerts
