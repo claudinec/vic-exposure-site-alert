@@ -1,10 +1,11 @@
 # Periodically fetch Victorian Covid-19 exposure site data and alert via Pushcut.
 
 import csv
-import json
 from datetime import datetime
+import json
 import logging
 import logging.handlers
+import os
 import re
 import requests
 
@@ -63,7 +64,7 @@ def parse_data(logger, config, date_last_run_dt, data_req):
             pushcut_data['title'] = tier_num[0] + ' Covid-19 exposure in ' + suburb_str
             pushcut_text = site['Site_title'] + '\n' + site['Site_streetaddress'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
             pushcut_data['text'] = pushcut_text
-            if config['pushcut_devices']:
+            if ('pushcut_devices' in config):
                 pushcut_data['devices'] = config['pushcut_devices']
             pushcut_req = requests.post(config['pushcut_url'], json=pushcut_data)
             if (pushcut_req.ok):
