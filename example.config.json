@@ -1,0 +1,22 @@
+{
+  "alert_suburbs":
+  [
+    "Coburg",
+    "Melbourne",
+    "St Kilda"
+  ],
+  "alert_buses": [
+    510
+  ],
+  "alert_trams": [
+    1,
+    19
+  ],
+  "alert_trains": [
+    "Sandringham",
+    "Upfield"
+  ],
+  "pushcut_url": "https://api.pushcut.io/mdJsebeyuOM-H1sBIlOFe/notifications/ExposureAlert",
+  "pushcut_devices": "My iPhone"
+}
+

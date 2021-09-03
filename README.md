@@ -4,7 +4,7 @@ This script queries the Victorian Government Covid-19 exposure site data for cho
 
 ## Configuration
 
-`config.json` is a [JSON](https://www.json.org/json-en.html) file with the following data.
+`config.json` ([example](example.config.json)) is a [JSON](https://www.json.org/json-en.html) file with the following data.
 
 - Suburbs and (optional) public transport to be queried
   - `alert_suburbs` is a list of suburbs
