@@ -103,7 +103,7 @@ def added_time(site):
     return added_dt
 
 def send_alert(logger, config, pushcut_data):
-    if (config['pushcut_devices']):
+    if ('pushcut_devices' in config):
         pushcut_data['devices'] = config['pushcut_devices']
     pushcut_req = requests.post(config['pushcut_url'], json=pushcut_data)
     if (pushcut_req.ok):
