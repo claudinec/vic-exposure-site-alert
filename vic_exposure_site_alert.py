@@ -9,33 +9,26 @@ import os
 import re
 import requests
 
-CONFIG_FILE = 'config.json'
-LOG_FILE = 'logs/debug.log'
-BUS_RE = r'Bus (?P<bus_route>[0-9]+)'
 TIER_RE = r'(Tier [0-9])'
-TRAIN_RE = r'Trains? - (?P<train_line>[a-zA-Z]+ Line)'
-TRAM_RE = r'Tram (?:Route )?(?P<tram_route>[0-9]+)'
-DATA_URL = 'https://drive.google.com/uc?export=download&id=1hULHQeuuMQwndvKy1_ScqObgX0NRUv1A'
-DATA_CSV_FILE = 'data/exposure-sites-data.csv'
-DATA_JSON_FILE = 'data/exposure-sites-data.json'
-DATE_LAST_RUN_FILE = 'data/date_last_run.json'
 
 # TODO mkdir data and logs if they don't exist
 
 # Start logging.
 def start_log():
+    log_file = 'logs/debug.log'
     alert_logger = logging.getLogger('alert')
     alert_logger.setLevel(logging.DEBUG)
     alert_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-    alert_fhandler = logging.handlers.TimedRotatingFileHandler(LOG_FILE, when='midnight', backupCount=28)
+    alert_fhandler = logging.handlers.TimedRotatingFileHandler(log_file, when='midnight', backupCount=28)
     alert_fhandler.setFormatter(alert_formatter)
     alert_logger.addHandler(alert_fhandler)
     return alert_logger
 
 # Check configuration.
 def get_config(logger):
+    config_file = 'config.json'
     url_re = r'https\:\/\/api\.pushcut\.io\/.*\/notifications\/'
-    with open(CONFIG_FILE, mode='r') as config_file_reader:
+    with open(config_file, mode='r') as config_file_reader:
         config = json.load(config_file_reader)
         if (re.match(url_re, config['pushcut_url'])):
             return config
@@ -50,8 +43,7 @@ def check_suburbs(logger, config, date_last_run_dt, data_json):
     for site in data_json:
         pushcut_data = {}
         suburb_str = site['Suburb']
-        if (site['Added_time'] != ''):
-            added_dt = added_time(site)
+        added_dt = added_time(site)
         if (suburb_str.strip() in alert_suburbs and added_dt > date_last_run_dt):
             tier_match = re.match(TIER_RE, site['Advice_title'])
             pushcut_data['title'] = tier_match[0] + ' Covid-19 exposure in ' + suburb_str
@@ -60,14 +52,16 @@ def check_suburbs(logger, config, date_last_run_dt, data_json):
             send_alert(logger, config, pushcut_data)
 
 def check_pt(logger, config, date_last_run_dt, data_json):
-    # alert_trains = config['alert_trains']
+    bus_re = r'Bus (?P<bus_route>[0-9]+)'
+    train_re = r'Trains? - (?P<train_line>[a-zA-Z]+ Line)'
+    tram_re = r'Tram (?:Route )?(?P<tram_route>[0-9]+)'
     for site in data_json:
         pushcut_data = {}
         if (site['Suburb'] == 'Public Transport'):
             added_dt = added_time(site)
-            bus_match = re.match(BUS_RE, site['Site_title'])
-            tram_match = re.match(TRAM_RE, site['Site_title'])
-            train_match = re.match(TRAIN_RE, site['Site_title'])
+            bus_match = re.match(bus_re, site['Site_title'])
+            train_match = re.match(train_re, site['Site_title'])
+            tram_match = re.match(tram_re, site['Site_title'])
             if (bus_match):
                 bus_route = int(bus_match['bus_route'])
                 if (bus_route in config['alert_buses'] and added_dt > date_last_run_dt):
@@ -77,10 +71,10 @@ def check_pt(logger, config, date_last_run_dt, data_json):
                     pushcut_data['text'] = pushcut_text
                     send_alert(logger, config, pushcut_data)
             elif (train_match):
-                train_route = int(train_match['train_line'])
-                if (train_route in config['alert_trains'] and added_dt > date_last_run_dt):
+                train_line = int(train_match['train_line'])
+                if (train_line in config['alert_trains'] and added_dt > date_last_run_dt):
                     tier_match = re.match(TIER_RE, site['Advice_title'])
-                    pushcut_data['title'] = tier_match[0] + 'Covid-19 exposure on train ' + train_route
+                    pushcut_data['title'] = tier_match[0] + 'Covid-19 exposure on train ' + train_line
                     pushcut_text = site['Site_title'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
                     pushcut_data['text'] = pushcut_text
                     send_alert(logger, config, pushcut_data)
@@ -113,6 +107,9 @@ def send_alert(logger, config, pushcut_data):
         logger.error(pushcut_req.status_code)
 
 def check_data():
+    data_csv_file = 'data/exposure-sites-data.csv'
+    data_json_file = 'data/exposure-sites-data.json'
+    date_last_run_file = 'data/date_last_run.json'
     # Start logging.
     logger = start_log()
 
@@ -120,7 +117,7 @@ def check_data():
     config = get_config(logger)
 
     # When did we last check the data?
-    with open(DATE_LAST_RUN_FILE, mode='r') as date_last_run_reader:
+    with open(date_last_run_file, mode='r') as date_last_run_reader:
         date_last_run = json.load(date_last_run_reader)
         date_last_run_str = date_last_run['date_last_run']
         if (date_last_run_str != ''):
@@ -130,17 +127,18 @@ def check_data():
 
     # Fetch data from Victorian Government Google Drive.
     logger.info('Fetching data')
-    data_req = requests.get(DATA_URL, stream=True)
+    data_url = 'https://drive.google.com/uc?export=download&id=1hULHQeuuMQwndvKy1_ScqObgX0NRUv1A'
+    data_req = requests.get(data_url, stream=True)
     if (data_req.ok):
         data_json = []
         data_str = data_req.content.decode()
-        with open(DATA_CSV_FILE, mode='w',newline='\r') as csv_file_writer:
+        with open(data_csv_file, mode='w',newline='\r') as csv_file_writer:
             print(data_str, file=csv_file_writer)
-        with open(DATA_CSV_FILE, mode='r',newline='\r') as csv_file_reader:
+        with open(data_csv_file, mode='r',newline='\r') as csv_file_reader:
             csv_reader = csv.DictReader(csv_file_reader)
             for row in csv_reader:
                 data_json.append(row)
-        with open(DATA_JSON_FILE, mode='w') as json_file_writer:
+        with open(data_json_file, mode='w') as json_file_writer:
             json.dump(data_json, json_file_writer)
 
         # Check suburbs.
@@ -153,11 +151,10 @@ def check_data():
         # Update last run date.
         date_now_dt = datetime.now()
         date_now_str = {"date_last_run": date_now_dt.isoformat()}
-        with open(DATE_LAST_RUN_FILE, mode='w') as date_last_run_writer:
+        with open(date_last_run_file, mode='w') as date_last_run_writer:
             json.dump(date_now_str, date_last_run_writer)
         logger.info('All done')
     else:
         logger.error(data_req.status_code)
 
 check_data()
-
