@@ -16,7 +16,7 @@
     "Sandringham",
     "Upfield"
   ],
-  "pushcut_url": "https://api.pushcut.io/mdJsebeyuOM-H1sBIlOFe/notifications/ExposureAlert",
+  "pushcut_url": "https://api.pushcut.io/example-secret/notifications/ExampleAlert",
   "pushcut_devices": "My iPhone"
 }
 
