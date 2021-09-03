@@ -50,13 +50,10 @@ def check_suburbs(logger, config, date_last_run_dt, data_json):
         pushcut_data = {}
         suburb_str = site['Suburb']
         if (site['Added_time'] != ''):
-            added_str = site['Added_date_dtm'] + 'T' + site['Added_time']
-        else:
-            added_str = site['Added_date_dtm'] + 'T00:00:00'
-        added_dt = datetime.fromisoformat(added_str)
+            added_dt = added_time(site)
         if (suburb_str.strip() in alert_suburbs and added_dt > date_last_run_dt):
-            tier_num = re.match(TIER_RE, site['Advice_title'])
-            pushcut_data['title'] = tier_num[0] + ' Covid-19 exposure in ' + suburb_str
+            tier_match = re.match(TIER_RE, site['Advice_title'])
+            pushcut_data['title'] = tier_match[0] + ' Covid-19 exposure in ' + suburb_str
             pushcut_text = site['Site_title'] + '\n' + site['Site_streetaddress'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
             pushcut_data['text'] = pushcut_text
             send_alert(logger, config, pushcut_data)
@@ -66,22 +63,43 @@ def check_pt(logger, config, date_last_run_dt, data_json):
     for site in data_json:
         pushcut_data = {}
         if (site['Suburb'] == 'Public Transport'):
-            if (site['Added_time'] != ''):
-                added_str = site['Added_date_dtm'] + 'T' + site['Added_time']
-            else:
-                added_str = site['Added_date_dtm'] + 'T00:00:00'
-            added_dt = datetime.fromisoformat(added_str)
+            added_dt = added_time(site)
             bus_match = re.match(BUS_RE, site['Site_title'])
             tram_match = re.match(TRAM_RE, site['Site_title'])
             train_match = re.match(TRAIN_RE, site['Site_title'])
-            if (tram_match):
-                tram_route = int(tram_match['tram_route'])
-                if (tram_route in config['alert_trams'] and added_dt > date_last_run_dt):
-                    tier_num = re.match(TIER_RE, site['Advice_title'])
-                    pushcut_data['title'] = tier_num[0] + 'Covid-19 exposure on tram ' + tram_route
+            if (bus_match):
+                bus_route = int(bus_match['bus_route'])
+                if (bus_route in config['alert_buses'] and added_dt > date_last_run_dt):
+                    tier_match = re.match(TIER_RE, site['Advice_title'])
+                    pushcut_data['title'] = tier_match[0] + 'Covid-19 exposure on bus ' + bus_route
                     pushcut_text = site['Site_title'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
                     pushcut_data['text'] = pushcut_text
                     send_alert(logger, config, pushcut_data)
+            elif (train_match):
+                train_route = int(train_match['train_line'])
+                if (train_route in config['alert_trains'] and added_dt > date_last_run_dt):
+                    tier_match = re.match(TIER_RE, site['Advice_title'])
+                    pushcut_data['title'] = tier_match[0] + 'Covid-19 exposure on train ' + train_route
+                    pushcut_text = site['Site_title'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
+                    pushcut_data['text'] = pushcut_text
+                    send_alert(logger, config, pushcut_data)
+            elif (tram_match):
+                tram_route = int(tram_match['tram_route'])
+                if (tram_route in config['alert_trams'] and added_dt > date_last_run_dt):
+                    tier_match = re.match(TIER_RE, site['Advice_title'])
+                    pushcut_data['title'] = tier_match[0] + 'Covid-19 exposure on tram ' + tram_route
+                    pushcut_text = site['Site_title'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
+                    pushcut_data['text'] = pushcut_text
+                    send_alert(logger, config, pushcut_data)
+
+def added_time(site):
+    # Some of the entries don't include the time it was added to the table, only the date.
+    if (site['Added_time'] != ''):
+        added_str = site['Added_date_dtm'] + 'T' + site['Added_time']
+    else:
+        added_str = site['Added_date_dtm'] + 'T00:00:00'
+    added_dt = datetime.fromisoformat(added_str)
+    return added_dt
 
 def send_alert(logger, config, pushcut_data):
     if (config['pushcut_devices']):
