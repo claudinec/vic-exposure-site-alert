@@ -1,4 +1,12 @@
-# Periodically fetch Victorian Covid-19 exposure site data and alert via Pushcut.
+"""Filtered Victorian Covid-19 exposure site alerts.
+
+This script queries the Victorian Government Covid-19 exposure site
+data for chosen suburbs and sends an alert for each new exposure site 
+added via Pushcut for iOS.
+"""
+
+__version__ = '0.2.1'
+__author__ = 'Claudine Chionh'
 
 import csv
 from datetime import datetime
@@ -11,10 +19,10 @@ import requests
 
 TIER_RE = r'(Tier [0-9])'
 
-# TODO mkdir data and logs if they don't exist
+# TODO mkdir data and logs if they don't exist.
 
-# Start logging.
 def start_log():
+    """Start logging."""
     log_file = 'logs/debug.log'
     alert_logger = logging.getLogger('alert')
     alert_logger.setLevel(logging.DEBUG)
@@ -24,8 +32,8 @@ def start_log():
     alert_logger.addHandler(alert_fhandler)
     return alert_logger
 
-# Check configuration.
 def get_config(logger):
+    """Open and validate configuration file."""
     config_file = 'config.json'
     url_re = r'https\:\/\/api\.pushcut\.io\/.*\/notifications\/'
     with open(config_file, mode='r') as config_file_reader:
@@ -36,8 +44,12 @@ def get_config(logger):
             logger.critical('Invalid Pushcut URL')
 
 def check_suburbs(logger, config, date_last_run_dt, data_json):
+    """Check exposure site data for selected suburbs.
+    
+    The default suburb alert is set to 'Melbourne' if no suburbs are
+    provided.
+    """
     alert_suburbs = config['alert_suburbs']
-    # Default suburb alert to Melbourne if no suburbs provided.
     if (alert_suburbs == []):
         alert_suburbs = ['Melbourne']
     for site in data_json:
@@ -52,6 +64,7 @@ def check_suburbs(logger, config, date_last_run_dt, data_json):
             send_alert(logger, config, pushcut_data)
 
 def check_pt(logger, config, date_last_run_dt, data_json):
+    """Check exposure site data for selected public transport routes."""
     bus_re = r'Bus (?P<bus_route>[0-9]+)'
     train_re = r'Trains? - (?P<train_line>[a-zA-Z]+ Line)'
     tram_re = r'Tram (?:Route )?(?P<tram_route>[0-9]+)'
@@ -88,7 +101,11 @@ def check_pt(logger, config, date_last_run_dt, data_json):
                     send_alert(logger, config, pushcut_data)
 
 def added_time(site):
-    # Some of the entries don't include the time it was added to the table, only the date.
+    """Return the date/time a site was added as a datetime object.
+    
+    Some of the entries don't include the time it was added to the table,
+    only the date.
+    """
     if (site['Added_time'] != ''):
         added_str = site['Added_date_dtm'] + 'T' + site['Added_time']
     else:
@@ -97,6 +114,7 @@ def added_time(site):
     return added_dt
 
 def send_alert(logger, config, pushcut_data):
+    """Send an alert to Pushcut."""
     if ('pushcut_devices' in config):
         pushcut_data['devices'] = config['pushcut_devices']
     pushcut_req = requests.post(config['pushcut_url'], json=pushcut_data)
