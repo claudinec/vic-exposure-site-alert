@@ -84,7 +84,7 @@ def check_pt(logger, config, date_last_run_dt, data_json):
                     pushcut_data['text'] = pushcut_text
                     send_alert(logger, config, pushcut_data)
             elif (train_match):
-                train_line = int(train_match['train_line'])
+                train_line = train_match['train_line']
                 if (train_line in config['alert_trains'] and added_dt > date_last_run_dt):
                     tier_match = re.match(TIER_RE, site['Advice_title'])
                     pushcut_data['title'] = tier_match[0] + 'Covid-19 exposure on train ' + train_line
