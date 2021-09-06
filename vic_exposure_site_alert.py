@@ -60,7 +60,6 @@ def check_suburbs(logger, config, date_last_run_dt, data_json):
             send_alert(logger, config, pushcut_data)
 
 def check_pt(logger, config, date_last_run_dt, data_json):
-    # alert_trains = config['alert_trains']
     for site in data_json:
         pushcut_data = {}
         if (site['Suburb'] == 'Public Transport'):
@@ -68,7 +67,7 @@ def check_pt(logger, config, date_last_run_dt, data_json):
             bus_match = re.match(BUS_RE, site['Site_title'])
             tram_match = re.match(TRAM_RE, site['Site_title'])
             train_match = re.match(TRAIN_RE, site['Site_title'])
-            if (bus_match):
+            if (bus_match and 'alert_buses' in config):
                 bus_route = int(bus_match['bus_route'])
                 if (bus_route in config['alert_buses'] and added_dt > date_last_run_dt):
                     tier_match = re.match(TIER_RE, site['Advice_title'])
@@ -76,7 +75,7 @@ def check_pt(logger, config, date_last_run_dt, data_json):
                     pushcut_text = site['Site_title'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
                     pushcut_data['text'] = pushcut_text
                     send_alert(logger, config, pushcut_data)
-            elif (train_match):
+            elif (train_match and 'alert_trains' in config):
                 train_route = int(train_match['train_line'])
                 if (train_route in config['alert_trains'] and added_dt > date_last_run_dt):
                     tier_match = re.match(TIER_RE, site['Advice_title'])
@@ -84,7 +83,7 @@ def check_pt(logger, config, date_last_run_dt, data_json):
                     pushcut_text = site['Site_title'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
                     pushcut_data['text'] = pushcut_text
                     send_alert(logger, config, pushcut_data)
-            elif (tram_match):
+            elif (tram_match and 'alert_trams' in config):
                 tram_route = int(tram_match['tram_route'])
                 if (tram_route in config['alert_trams'] and added_dt > date_last_run_dt):
                     tier_match = re.match(TIER_RE, site['Advice_title'])
@@ -147,7 +146,7 @@ def check_data():
         logger.info('Checking suburbs')
         check_suburbs(logger, config, date_last_run_dt, data_json)
         # Check public transport.
-        if (config['alert_trains'] != [] or config['alert_trams'] != []):
+        if ('alert_buses' in config or 'alert_trains' in config or 'alert_trams' in config):
             logger.info('Checking public transport')
             check_pt(logger, config, date_last_run_dt, data_json)
         # Update last run date.
@@ -160,4 +159,3 @@ def check_data():
         logger.error(data_req.status_code)
 
 check_data()
-
