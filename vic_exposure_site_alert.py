@@ -5,7 +5,7 @@ data for chosen suburbs and sends an alert for each new exposure site
 added via Pushcut for iOS.
 """
 
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 __author__ = 'Claudine Chionh'
 
 import csv
