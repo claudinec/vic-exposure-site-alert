@@ -79,7 +79,7 @@ def check_pt(logger, config, date_last_run_dt, data_json):
                 bus_route = int(bus_match['bus_route'])
                 if (bus_route in config['alert_buses'] and added_dt > date_last_run_dt):
                     tier_match = re.match(TIER_RE, site['Advice_title'])
-                    pushcut_data['title'] = tier_match[0] + 'Covid-19 exposure on bus ' + bus_route
+                    pushcut_data['title'] = tier_match[0] + ' Covid-19 exposure on bus ' + str(bus_route)
                     pushcut_text = site['Site_title'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
                     pushcut_data['text'] = pushcut_text
                     send_alert(logger, config, pushcut_data)
@@ -87,7 +87,7 @@ def check_pt(logger, config, date_last_run_dt, data_json):
                 train_line = train_match['train_line']
                 if (train_line in config['alert_trains'] and added_dt > date_last_run_dt):
                     tier_match = re.match(TIER_RE, site['Advice_title'])
-                    pushcut_data['title'] = tier_match[0] + 'Covid-19 exposure on train ' + train_line
+                    pushcut_data['title'] = tier_match[0] + ' Covid-19 exposure on train ' + train_line
                     pushcut_text = site['Site_title'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
                     pushcut_data['text'] = pushcut_text
                     send_alert(logger, config, pushcut_data)
@@ -95,7 +95,7 @@ def check_pt(logger, config, date_last_run_dt, data_json):
                 tram_route = int(tram_match['tram_route'])
                 if (tram_route in config['alert_trams'] and added_dt > date_last_run_dt):
                     tier_match = re.match(TIER_RE, site['Advice_title'])
-                    pushcut_data['title'] = tier_match[0] + 'Covid-19 exposure on tram ' + tram_route
+                    pushcut_data['title'] = tier_match[0] + ' Covid-19 exposure on tram ' + str(tram_route)
                     pushcut_text = site['Site_title'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
                     pushcut_data['text'] = pushcut_text
                     send_alert(logger, config, pushcut_data)
