@@ -6,7 +6,23 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 
 ## [Unreleased]
 
+## [0.2.2] - 2021-09-06
+
+### Added
+
+- Add changelog
+
+### Changed
+
+- Change comments to docstrings
+
+### Fixed
+
+- Fix public transport checks
+
 ## [0.2.1] - 2021-09-03
+
+### Changed
 
 - More tidying up
 
@@ -31,7 +47,8 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/claudinec/vic-exposure-site-alert/compare/v0.2.1...HEAD
+[unreleased]: https://github.com/claudinec/vic-exposure-site-alert/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/claudinec/vic-exposure-site-alert/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/claudinec/vic-exposure-site-alert/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/claudinec/vic-exposure-site-alert/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/claudinec/vic-exposure-site-alert/releases/tag/v0.1.0
