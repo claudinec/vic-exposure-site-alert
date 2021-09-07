@@ -57,6 +57,7 @@ def check_suburbs(logger, config, date_last_run_dt, data_json):
         suburb_str = site['Suburb']
         added_dt = added_time(site)
         if (suburb_str.strip() in alert_suburbs and added_dt > date_last_run_dt):
+            logger.debug(suburb_str)
             tier_match = re.match(TIER_RE, site['Advice_title'])
             pushcut_data['title'] = tier_match[0] + ' Covid-19 exposure in ' + suburb_str
             pushcut_text = site['Site_title'] + '\n' + site['Site_streetaddress'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
@@ -71,6 +72,7 @@ def check_pt(logger, config, date_last_run_dt, data_json):
     for site in data_json:
         pushcut_data = {}
         if (site['Suburb'] == 'Public Transport'):
+            tier_match = re.match(TIER_RE, site['Advice_title'])
             added_dt = added_time(site)
             bus_match = re.match(bus_re, site['Site_title'])
             train_match = re.match(train_re, site['Site_title'])
@@ -78,7 +80,7 @@ def check_pt(logger, config, date_last_run_dt, data_json):
             if (bus_match):
                 bus_route = int(bus_match['bus_route'])
                 if (bus_route in config['alert_buses'] and added_dt > date_last_run_dt):
-                    tier_match = re.match(TIER_RE, site['Advice_title'])
+                    logger.debug(bus_route)
                     pushcut_data['title'] = tier_match[0] + ' Covid-19 exposure on bus ' + str(bus_route)
                     pushcut_text = site['Site_title'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
                     pushcut_data['text'] = pushcut_text
@@ -86,7 +88,7 @@ def check_pt(logger, config, date_last_run_dt, data_json):
             elif (train_match):
                 train_line = train_match['train_line']
                 if (train_line in config['alert_trains'] and added_dt > date_last_run_dt):
-                    tier_match = re.match(TIER_RE, site['Advice_title'])
+                    logger.debug(train_line)
                     pushcut_data['title'] = tier_match[0] + ' Covid-19 exposure on train ' + train_line
                     pushcut_text = site['Site_title'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
                     pushcut_data['text'] = pushcut_text
@@ -94,7 +96,7 @@ def check_pt(logger, config, date_last_run_dt, data_json):
             elif (tram_match and 'alert_trams' in config):
                 tram_route = int(tram_match['tram_route'])
                 if (tram_route in config['alert_trams'] and added_dt > date_last_run_dt):
-                    tier_match = re.match(TIER_RE, site['Advice_title'])
+                    logger.debug(tram_route)
                     pushcut_data['title'] = tier_match[0] + ' Covid-19 exposure on tram ' + str(tram_route)
                     pushcut_text = site['Site_title'] + '\n' + site['Exposure_date'] + ' ' + site['Exposure_time']
                     pushcut_data['text'] = pushcut_text
