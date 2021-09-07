@@ -120,7 +120,7 @@ def send_alert(logger, config, pushcut_data):
     pushcut_req = requests.post(config['pushcut_url'], json=pushcut_data)
     if (pushcut_req.ok):
         log_msg = 'Alert sent: ' + pushcut_data['title']
-        logger.info(log_msg)
+        logger.debug(log_msg)
     else:
         logger.error(pushcut_req.status_code)
 
@@ -144,7 +144,7 @@ def check_data():
             date_last_run_dt = datetime.fromisoformat(date_last_run_str)
 
     # Fetch data from Victorian Government Google Drive.
-    logger.info('Fetching data')
+    logger.debug('Fetching data')
     data_url = 'https://drive.google.com/uc?export=download&id=1hULHQeuuMQwndvKy1_ScqObgX0NRUv1A'
     data_req = requests.get(data_url, stream=True)
     if (data_req.ok):
@@ -160,18 +160,18 @@ def check_data():
             json.dump(data_json, json_file_writer)
 
         # Check suburbs.
-        logger.info('Checking suburbs')
+        logger.debug('Checking suburbs')
         check_suburbs(logger, config, date_last_run_dt, data_json)
         # Check public transport.
         if ('alert_buses' in config or 'alert_trains' in config or 'alert_trams' in config):
-            logger.info('Checking public transport')
+            logger.debug('Checking public transport')
             check_pt(logger, config, date_last_run_dt, data_json)
         # Update last run date.
         date_now_dt = datetime.now()
         date_now_str = {"date_last_run": date_now_dt.isoformat()}
         with open(date_last_run_file, mode='w') as date_last_run_writer:
             json.dump(date_now_str, date_last_run_writer)
-        logger.info('All done')
+        logger.debug('All done')
     else:
         logger.error(data_req.status_code)
 
