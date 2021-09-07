@@ -117,6 +117,9 @@ def send_alert(logger, config, pushcut_data):
     """Send an alert to Pushcut."""
     if ('pushcut_devices' in config):
         pushcut_data['devices'] = config['pushcut_devices']
+        for device_str in config['pushcut_devices']:
+            device_msg = 'Sending to device ' + device_str
+            logger.debug(device_msg)
     pushcut_req = requests.post(config['pushcut_url'], json=pushcut_data)
     if (pushcut_req.ok):
         log_msg = 'Alert sent: ' + pushcut_data['title']
