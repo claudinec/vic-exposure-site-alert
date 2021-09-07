@@ -6,9 +6,13 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 
 ## [Unreleased]
 
+### Added
+
+- Add scheduling
+
 ### Changed
 
-- Changed logger.info() to logger.debug()
+- Change logger.info() to logger.debug()
 
 ## [0.2.2] - 2021-09-06
 

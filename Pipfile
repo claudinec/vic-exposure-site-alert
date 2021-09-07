@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 requests = "*"
+schedule = "*"
 
 [dev-packages]
 pylint = "*"

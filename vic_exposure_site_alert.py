@@ -15,20 +15,28 @@ import logging
 import logging.handlers
 import os
 import re
+import time
 import requests
+import schedule
 
 TIER_RE = r'(Tier [0-9])'
 
 # TODO mkdir data and logs if they don't exist.
 
-def start_log():
+def start_logs():
     """Start logging."""
-    log_file = 'logs/debug.log'
+    logger_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    schedule_log_file = 'logs/schedule.log'
+    schedule_logger = logging.getLogger('schedule')
+    schedule_logger.setLevel(logging.DEBUG)
+    schedule_fhandler = logging.handlers.TimedRotatingFileHandler(schedule_log_file, when='midnight', backupCount=7)
+    schedule_fhandler.setFormatter(logger_formatter)
+    schedule_logger.addHandler(schedule_fhandler)
+    alert_log_file = 'logs/alert.log'
     alert_logger = logging.getLogger('alert')
     alert_logger.setLevel(logging.DEBUG)
-    alert_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-    alert_fhandler = logging.handlers.TimedRotatingFileHandler(log_file, when='midnight', backupCount=28)
-    alert_fhandler.setFormatter(alert_formatter)
+    alert_fhandler = logging.handlers.TimedRotatingFileHandler(alert_log_file, when='midnight', backupCount=28)
+    alert_fhandler.setFormatter(logger_formatter)
     alert_logger.addHandler(alert_fhandler)
     return alert_logger
 
@@ -134,7 +142,7 @@ def check_data():
     data_json_file = 'data/exposure-sites-data.json'
     date_last_run_file = 'data/date_last_run.json'
     # Start logging.
-    logger = start_log()
+    logger = start_logs()
 
     # Check configuration.
     config = get_config(logger)
@@ -177,7 +185,16 @@ def check_data():
         with open(date_last_run_file, mode='w') as date_last_run_writer:
             json.dump(date_now_str, date_last_run_writer)
         logger.debug('All done')
+        logging.shutdown()
     else:
         logger.error(data_req.status_code)
+        logging.shutdown()
 
-check_data()
+def main():
+    schedule.every(30).minutes.do(check_data)
+    while True:
+        schedule.run_pending()
+        time.sleep(10)
+
+if __name__ == "__main__":
+    main()
