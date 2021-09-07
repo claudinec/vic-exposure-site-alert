@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 
 ## [Unreleased]
 
+### Changed
+
+- Changed logger.info() to logger.debug()
+
 ## [0.2.2] - 2021-09-06
 
 ### Added
