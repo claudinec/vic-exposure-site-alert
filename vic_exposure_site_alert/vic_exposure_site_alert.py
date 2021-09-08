@@ -179,10 +179,12 @@ def check_data():
         # Check suburbs.
         logger.debug('Checking suburbs')
         check_suburbs(logger, config, date_last_run_dt, data_json)
+
         # Check public transport.
         if ('alert_buses' in config or 'alert_trains' in config or 'alert_trams' in config):
             logger.debug('Checking public transport')
             check_pt(logger, config, date_last_run_dt, data_json)
+
         # Update last run date.
         date_now_dt = datetime.now()
         date_now_str = {"date_last_run": date_now_dt.isoformat()}
