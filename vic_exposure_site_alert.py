@@ -44,12 +44,16 @@ def get_config(logger):
     """Open and validate configuration file."""
     config_file = 'config.json'
     url_re = r'https\:\/\/api\.pushcut\.io\/.*\/notifications\/'
-    with open(config_file, mode='r') as config_file_reader:
-        config = json.load(config_file_reader)
-        if (re.match(url_re, config['pushcut_url'])):
-            return config
-        else:
-            logger.critical('Invalid Pushcut URL')
+    try:
+        with open(config_file, mode='r') as config_file_reader:
+            config = json.load(config_file_reader)
+            try:
+                re.match(url_re, config['pushcut_url'])
+                return config
+            except:
+                logger.exception('Invalid Pushcut URL')
+    except:
+        logger.exception('Unable to open config file')
 
 def check_suburbs(logger, config, date_last_run_dt, data_json):
     """Check exposure site data for selected suburbs.
