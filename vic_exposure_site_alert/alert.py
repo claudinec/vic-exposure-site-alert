@@ -35,7 +35,7 @@ def start_logs():
     schedule_fhandler.setFormatter(logger_formatter)
     schedule_logger.addHandler(schedule_fhandler)
     alert_log_file = 'logs/alert.log'
-    alert_logger = logging.getLogger('alert')
+    alert_logger = logging.getLogger(__name__)
     alert_logger.setLevel(logging.DEBUG)
     alert_fhandler = logging.handlers.TimedRotatingFileHandler(alert_log_file, when='midnight', backupCount=28)
     alert_fhandler.setFormatter(logger_formatter)
