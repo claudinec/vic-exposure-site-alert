@@ -16,6 +16,7 @@ import logging.handlers
 import os
 import re
 import time
+
 import requests
 import schedule
 
@@ -141,12 +142,11 @@ def send_alert(logger, config, pushcut_data):
     else:
         logger.error(pushcut_req.status_code)
 
-def check_data():
+def check_data(logger):
+    """Check exposure site data."""
     data_csv_file = 'data/exposure-sites-data.csv'
     data_json_file = 'data/exposure-sites-data.json'
     date_last_run_file = 'data/date_last_run.json'
-    # Start logging.
-    logger = start_logs()
 
     # Check configuration.
     config = get_config(logger)
@@ -191,16 +191,29 @@ def check_data():
         with open(date_last_run_file, mode='w') as date_last_run_writer:
             json.dump(date_now_str, date_last_run_writer)
         logger.debug('All done')
-        logging.shutdown()
     else:
         logger.error(data_req.status_code)
-        logging.shutdown()
 
-def main():
-    schedule.every(30).minutes.do(check_data)
-    while True:
-        schedule.run_pending()
-        time.sleep(10)
+def main(freq=0, end):
+    """Check exposure site data.
+    
+    If ``freq`` is 0 or missing, run once.
+    Otherwise, run every ``freq`` minutes until ``end``.
+    """
+    logger = start_logs()
+    if freq==0:
+        check_data(logger)
+        logging.shutdown()
+    else:
+        try:
+            schedule.every(freq).minutes.until(end).do(check_data(logger))
+            while True:
+                schedule.run_pending()
+                time.sleep(10)
+        except:
+            logger.exception(sys.exc_info()[0])
+        finally:
+            logging.shutdown()
 
 if __name__ == "__main__":
     main()
