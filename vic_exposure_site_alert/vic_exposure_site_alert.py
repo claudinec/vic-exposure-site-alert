@@ -16,6 +16,7 @@ import logging.handlers
 import os
 import re
 import time
+
 import requests
 import schedule
 
@@ -44,12 +45,16 @@ def get_config(logger):
     """Open and validate configuration file."""
     config_file = 'config.json'
     url_re = r'https\:\/\/api\.pushcut\.io\/.*\/notifications\/'
-    with open(config_file, mode='r') as config_file_reader:
-        config = json.load(config_file_reader)
-        if (re.match(url_re, config['pushcut_url'])):
-            return config
-        else:
-            logger.critical('Invalid Pushcut URL')
+    try:
+        with open(config_file, mode='r') as config_file_reader:
+            config = json.load(config_file_reader)
+            try:
+                re.match(url_re, config['pushcut_url'])
+                return config
+            except:
+                logger.exception('Invalid Pushcut URL')
+    except:
+        logger.exception('Unable to open config file')
 
 def check_suburbs(logger, config, date_last_run_dt, data_json):
     """Check exposure site data for selected suburbs.
@@ -137,12 +142,11 @@ def send_alert(logger, config, pushcut_data):
     else:
         logger.error(pushcut_req.status_code)
 
-def check_data():
+def check_data(logger):
+    """Check exposure site data."""
     data_csv_file = 'data/exposure-sites-data.csv'
     data_json_file = 'data/exposure-sites-data.json'
     date_last_run_file = 'data/date_last_run.json'
-    # Start logging.
-    logger = start_logs()
 
     # Check configuration.
     config = get_config(logger)
@@ -175,26 +179,41 @@ def check_data():
         # Check suburbs.
         logger.debug('Checking suburbs')
         check_suburbs(logger, config, date_last_run_dt, data_json)
+
         # Check public transport.
         if ('alert_buses' in config or 'alert_trains' in config or 'alert_trams' in config):
             logger.debug('Checking public transport')
             check_pt(logger, config, date_last_run_dt, data_json)
+
         # Update last run date.
         date_now_dt = datetime.now()
         date_now_str = {"date_last_run": date_now_dt.isoformat()}
         with open(date_last_run_file, mode='w') as date_last_run_writer:
             json.dump(date_now_str, date_last_run_writer)
         logger.debug('All done')
-        logging.shutdown()
     else:
         logger.error(data_req.status_code)
-        logging.shutdown()
 
-def main():
-    schedule.every(30).minutes.do(check_data)
-    while True:
-        schedule.run_pending()
-        time.sleep(10)
+def main(freq=0, end=''):
+    """Check exposure site data.
+    
+    If ``freq`` is 0 or missing, run once.
+    Otherwise, run every ``freq`` minutes until ``end``.
+    """
+    logger = start_logs()
+    if freq==0:
+        check_data(logger)
+        logging.shutdown()
+    else:
+        try:
+            schedule.every(freq).minutes.until(end).do(check_data(logger))
+            while True:
+                schedule.run_pending()
+                time.sleep(10)
+        except:
+            logger.exception(sys.exc_info()[0])
+        finally:
+            logging.shutdown()
 
 if __name__ == "__main__":
     main()
