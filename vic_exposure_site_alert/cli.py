@@ -5,8 +5,6 @@ Run the check once unless a frequency (in minutes) is provided.
 
 import click
 
-import .vic_exposure_site_alert
-
 @click.group()
 def main():
     pass
