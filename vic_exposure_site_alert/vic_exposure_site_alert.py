@@ -194,7 +194,7 @@ def check_data(logger):
     else:
         logger.error(data_req.status_code)
 
-def main(freq=0, end):
+def main(freq=0, end=''):
     """Check exposure site data.
     
     If ``freq`` is 0 or missing, run once.
