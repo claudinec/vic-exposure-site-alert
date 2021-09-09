@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "78a1889391ea69f2a5c125c9eec4f7e3be15cda483c2e8058a2013f4857d90e9"
+            "sha256": "c65d4924c8a6dbeb73218c2d1830ab6fa69e62bcd451f6c4b6f01e65b2f9de6f"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -70,6 +70,10 @@
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_version < '4'",
             "version": "==1.26.6"
+        },
+        "vic-exposure-site-alert": {
+            "path": ".",
+            "version": "==0.2.2"
         }
     },
     "develop": {

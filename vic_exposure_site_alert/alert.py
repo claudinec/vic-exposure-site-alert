@@ -207,8 +207,10 @@ def main(freq=0, end=''):
         logging.shutdown()
     else:
         try:
-            schedule.every(freq).minutes.until(end).do(check_data(logger))
-            while True:
+            def do_check_data():
+                check_data(logger)
+            schedule.every(freq).minutes.until(end).do(do_check_data)
+            while schedule.next_run:
                 schedule.run_pending()
                 time.sleep(10)
         except:

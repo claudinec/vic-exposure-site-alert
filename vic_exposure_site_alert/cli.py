@@ -5,21 +5,24 @@ Run the check once unless a frequency (in minutes) is provided.
 
 import click
 
-import .vic_exposure_site_alert
+from .alert import main as alert
 
 @click.group()
 def main():
     pass
 
-@main.command()
+@click.command()
 def once():
-    vic_exposure_site_alert()
+    alert()
 
-@main.command()
-@main.option('--freq', type=click.IntRange(min=1), default=60, show_default=True)
-@main.option('--end', type=str, default="23:00", show_default=True)
+@click.command()
+@click.option('--freq', type=click.IntRange(min=1), default=60, show_default=True)
+@click.option('--end', type=str, default="23:00", show_default=True)
 def every(freq, end):
-    vic_exposure_site_alert(freq, end)
+    alert(freq, end)
+
+main.add_command(once)
+main.add_command(every)
 
 if __name__ == '__main__':
     main()
