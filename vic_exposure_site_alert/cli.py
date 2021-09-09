@@ -6,6 +6,7 @@ Run the check once unless a frequency (in minutes) is provided.
 import click
 
 from .alert import main as alert
+from .utils import start_logs
 
 @click.group()
 def main():
@@ -25,4 +26,6 @@ main.add_command(once)
 main.add_command(every)
 
 if __name__ == '__main__':
+    cli_logger = start_logs('cli', 7)
+    cli_logger.debug('Called from command line')
     main()

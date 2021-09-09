@@ -21,26 +21,11 @@ import time
 import requests
 import schedule
 
+from .utils import start_logs
+
 TIER_RE = r'(Tier [0-9])'
 
 # TODO mkdir data and logs if they don't exist.
-
-def start_logs():
-    """Start logging."""
-    logger_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-    schedule_log_file = 'logs/schedule.log'
-    schedule_logger = logging.getLogger('schedule')
-    schedule_logger.setLevel(logging.DEBUG)
-    schedule_fhandler = logging.handlers.TimedRotatingFileHandler(schedule_log_file, when='midnight', backupCount=7)
-    schedule_fhandler.setFormatter(logger_formatter)
-    schedule_logger.addHandler(schedule_fhandler)
-    alert_log_file = 'logs/alert.log'
-    alert_logger = logging.getLogger(__name__)
-    alert_logger.setLevel(logging.DEBUG)
-    alert_fhandler = logging.handlers.TimedRotatingFileHandler(alert_log_file, when='midnight', backupCount=28)
-    alert_fhandler.setFormatter(logger_formatter)
-    alert_logger.addHandler(alert_fhandler)
-    return alert_logger
 
 def get_config(logger):
     """Open and validate configuration file."""
@@ -201,7 +186,7 @@ def main(freq=0, end=''):
     If ``freq`` is 0 or missing, run once.
     Otherwise, run every ``freq`` minutes until ``end``.
     """
-    logger = start_logs()
+    logger = start_logs('alert', 28)
     if freq==0:
         check_data(logger)
         logging.shutdown()
@@ -209,10 +194,12 @@ def main(freq=0, end=''):
         try:
             def do_check_data():
                 check_data(logger)
+            start_logs('schedule', 7)
             schedule.every(freq).minutes.until(end).do(do_check_data)
-            while schedule.next_run:
+            while schedule.next_run():
                 schedule.run_pending()
                 time.sleep(10)
+            logging.shutdown()
         except:
             logger.exception(sys.exc_info()[0])
         finally:
