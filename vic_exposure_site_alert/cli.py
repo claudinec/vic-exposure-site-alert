@@ -19,8 +19,8 @@ def once():
     alert()
 
 @click.command()
-@click.option('--freq', type=click.IntRange(min=1), default=60, show_default=True, help="Frequency in minutes.")
-@click.option('--end', type=str, default="23:00", show_default=True, help="When to stop checking.")
+@click.option('--freq', type=click.IntRange(min=1), default=60, show_default=True, help="Frequency (in minutes) of scheduled checks.")
+@click.option('--end', type=str, default="23:00", show_default=True, help="When scheduled checks will end.")
 def every(freq, end):
     """Schedule checks in the future."""
     alert(freq, end)
