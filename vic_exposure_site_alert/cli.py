@@ -10,16 +10,19 @@ from .utils import start_logs
 
 @click.group()
 def main():
+    """Run or schedule exposure site checks."""
     pass
 
 @click.command()
 def once():
+    """Run a check now."""
     alert()
 
 @click.command()
-@click.option('--freq', type=click.IntRange(min=1), default=60, show_default=True)
-@click.option('--end', type=str, default="23:00", show_default=True)
+@click.option('--freq', type=click.IntRange(min=1), default=60, show_default=True, help="Frequency in minutes.")
+@click.option('--end', type=str, default="23:00", show_default=True, help="When to stop checking.")
 def every(freq, end):
+    """Schedule checks in the future."""
     alert(freq, end)
 
 main.add_command(once)
