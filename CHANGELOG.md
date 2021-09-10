@@ -6,14 +6,17 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 
 ## [Unreleased]
 
+## [0.3.0] - 2021-09-10
+
 ### Added
 
 - Add scheduling
-- Add command-line interface to choose scheduling frequency
+- Add command-line interface to choose scheduling frequency (closes [#7](https://github.com/claudinec/vic-exposure-site-alert/issues/7))
 
 ### Changed
 
 - Change logger.info() to logger.debug()
+- Look for data and logs directories in .local/share (fixes [#1](https://github.com/claudinec/vic-exposure-site-alert/issues/1))
 
 ## [0.2.2] - 2021-09-06
 
@@ -56,7 +59,8 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/claudinec/vic-exposure-site-alert/compare/v0.2.2...HEAD
+[unreleased]: https://github.com/claudinec/vic-exposure-site-alert/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/claudinec/vic-exposure-site-alert/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/claudinec/vic-exposure-site-alert/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/claudinec/vic-exposure-site-alert/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/claudinec/vic-exposure-site-alert/compare/v0.1.0...v0.2.0
