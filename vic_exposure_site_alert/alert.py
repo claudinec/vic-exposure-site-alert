@@ -1,13 +1,3 @@
-"""Filtered Victorian Covid-19 exposure site alerts.
-
-This script queries the Victorian Government Covid-19 exposure site
-data for chosen suburbs and sends an alert for each new exposure site 
-added via Pushcut for iOS.
-"""
-
-__version__ = '0.2.2'
-__author__ = 'Claudine Chionh'
-
 import csv
 from datetime import datetime
 import json
@@ -15,41 +5,32 @@ import logging
 import logging.handlers
 import os
 import re
+import sys
 import time
+
 import requests
 import schedule
+
+from .utils import start_logs
 
 TIER_RE = r'(Tier [0-9])'
 
 # TODO mkdir data and logs if they don't exist.
 
-def start_logs():
-    """Start logging."""
-    logger_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-    schedule_log_file = 'logs/schedule.log'
-    schedule_logger = logging.getLogger('schedule')
-    schedule_logger.setLevel(logging.DEBUG)
-    schedule_fhandler = logging.handlers.TimedRotatingFileHandler(schedule_log_file, when='midnight', backupCount=7)
-    schedule_fhandler.setFormatter(logger_formatter)
-    schedule_logger.addHandler(schedule_fhandler)
-    alert_log_file = 'logs/alert.log'
-    alert_logger = logging.getLogger('alert')
-    alert_logger.setLevel(logging.DEBUG)
-    alert_fhandler = logging.handlers.TimedRotatingFileHandler(alert_log_file, when='midnight', backupCount=28)
-    alert_fhandler.setFormatter(logger_formatter)
-    alert_logger.addHandler(alert_fhandler)
-    return alert_logger
-
 def get_config(logger):
     """Open and validate configuration file."""
     config_file = 'config.json'
     url_re = r'https\:\/\/api\.pushcut\.io\/.*\/notifications\/'
-    with open(config_file, mode='r') as config_file_reader:
-        config = json.load(config_file_reader)
-        if (re.match(url_re, config['pushcut_url'])):
-            return config
-        else:
-            logger.critical('Invalid Pushcut URL')
+    try:
+        with open(config_file, mode='r') as config_file_reader:
+            config = json.load(config_file_reader)
+            try:
+                re.match(url_re, config['pushcut_url'])
+                return config
+            except:
+                logger.exception('Invalid Pushcut URL')
+    except:
+        logger.exception('Unable to open config file')
 
 def check_suburbs(logger, config, date_last_run_dt, data_json):
     """Check exposure site data for selected suburbs.
@@ -137,12 +118,11 @@ def send_alert(logger, config, pushcut_data):
     else:
         logger.error(pushcut_req.status_code)
 
-def check_data():
+def check_data(logger):
+    """Check exposure site data."""
     data_csv_file = 'data/exposure-sites-data.csv'
     data_json_file = 'data/exposure-sites-data.json'
     date_last_run_file = 'data/date_last_run.json'
-    # Start logging.
-    logger = start_logs()
 
     # Check configuration.
     config = get_config(logger)
@@ -175,26 +155,45 @@ def check_data():
         # Check suburbs.
         logger.debug('Checking suburbs')
         check_suburbs(logger, config, date_last_run_dt, data_json)
+
         # Check public transport.
         if ('alert_buses' in config or 'alert_trains' in config or 'alert_trams' in config):
             logger.debug('Checking public transport')
             check_pt(logger, config, date_last_run_dt, data_json)
+
         # Update last run date.
         date_now_dt = datetime.now()
         date_now_str = {"date_last_run": date_now_dt.isoformat()}
         with open(date_last_run_file, mode='w') as date_last_run_writer:
             json.dump(date_now_str, date_last_run_writer)
         logger.debug('All done')
-        logging.shutdown()
     else:
         logger.error(data_req.status_code)
-        logging.shutdown()
 
-def main():
-    schedule.every(30).minutes.do(check_data)
-    while True:
-        schedule.run_pending()
-        time.sleep(10)
+def main(freq=0, end=''):
+    """Check exposure site data.
+    
+    If ``freq`` is 0 or missing, run once.
+    Otherwise, run every ``freq`` minutes until ``end``.
+    """
+    logger = start_logs('alert', 28)
+    if freq==0:
+        check_data(logger)
+        logging.shutdown()
+    else:
+        try:
+            def do_check_data():
+                check_data(logger)
+            start_logs('schedule', 7)
+            schedule.every(freq).minutes.until(end).do(do_check_data)
+            while schedule.next_run():
+                schedule.run_pending()
+                time.sleep(10)
+            logging.shutdown()
+        except:
+            logger.exception(sys.exc_info()[0])
+        finally:
+            logging.shutdown()
 
 if __name__ == "__main__":
     main()

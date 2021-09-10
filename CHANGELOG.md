@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 ### Added
 
 - Add scheduling
+- Add command-line interface to choose scheduling frequency
 
 ### Changed
 
