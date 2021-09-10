@@ -4,6 +4,7 @@ import json
 import logging
 import logging.handlers
 import os
+import pathlib
 import re
 import sys
 import time
@@ -11,18 +12,17 @@ import time
 import requests
 import schedule
 
-from .utils import start_logs
+from . import utils
 
 TIER_RE = r'(Tier [0-9])'
 
-# TODO mkdir data and logs if they don't exist.
-
 def get_config(logger):
     """Open and validate configuration file."""
-    config_file = 'config.json'
+    project_dir = utils.get_project_dir()
+    config_file = project_dir.joinpath('config.json')
     url_re = r'https\:\/\/api\.pushcut\.io\/.*\/notifications\/'
     try:
-        with open(config_file, mode='r') as config_file_reader:
+        with config_file.open(mode='r') as config_file_reader:
             config = json.load(config_file_reader)
             try:
                 re.match(url_re, config['pushcut_url'])
@@ -38,8 +38,9 @@ def check_suburbs(logger, config, date_last_run_dt, data_json):
     The default suburb alert is set to 'Melbourne' if no suburbs are
     provided.
     """
-    alert_suburbs = config['alert_suburbs']
-    if (alert_suburbs == []):
+    try:
+        alert_suburbs = config['alert_suburbs']
+    except:
         alert_suburbs = ['Melbourne']
     for site in data_json:
         pushcut_data = {}
@@ -120,21 +121,31 @@ def send_alert(logger, config, pushcut_data):
 
 def check_data(logger):
     """Check exposure site data."""
-    data_csv_file = 'data/exposure-sites-data.csv'
-    data_json_file = 'data/exposure-sites-data.json'
-    date_last_run_file = 'data/date_last_run.json'
+    project_dir = utils.get_project_dir()
+    data_dir = project_dir.joinpath('data')
+    if not data_dir.is_dir():
+        utils.make_dir('data')
+    data_csv_file = data_dir.joinpath('exposure-sites-data.csv')
+    data_json_file = data_dir.joinpath('exposure-sites-data.json')
+    date_last_run_file = data_dir.joinpath('date_last_run.json')
 
     # Check configuration.
     config = get_config(logger)
 
     # When did we last check the data?
-    with open(date_last_run_file, mode='r') as date_last_run_reader:
-        date_last_run = json.load(date_last_run_reader)
-        date_last_run_str = date_last_run['date_last_run']
-        if (date_last_run_str != ''):
-            log_msg = 'Date last run: ' + date_last_run_str
-            logger.debug(log_msg)
-            date_last_run_dt = datetime.fromisoformat(date_last_run_str)
+    try:
+        with date_last_run_file.open(mode='r') as date_last_run_reader:
+            date_last_run = json.load(date_last_run_reader)
+            date_last_run_str = date_last_run['date_last_run']
+            if date_last_run_str != '':
+                log_msg = 'Date last run: ' + date_last_run_str
+                logger.debug(log_msg)
+                date_last_run_dt = datetime.fromisoformat(date_last_run_str)
+            else:
+                date_last_run_dt = datetime.today().replace(hour=0, minute=0, second=0)
+    except:
+        logger.exception(sys.exc_info()[0])
+        date_last_run_dt = datetime.today().replace(hour=0, minute=0, second=0)
 
     # Fetch data from Victorian Government Google Drive.
     logger.debug('Fetching data')
@@ -143,13 +154,13 @@ def check_data(logger):
     if (data_req.ok):
         data_json = []
         data_str = data_req.content.decode()
-        with open(data_csv_file, mode='w',newline='\r') as csv_file_writer:
+        with data_csv_file.open(mode='w',newline='\r') as csv_file_writer:
             print(data_str, file=csv_file_writer)
-        with open(data_csv_file, mode='r',newline='\r') as csv_file_reader:
+        with data_csv_file.open(mode='r',newline='\r') as csv_file_reader:
             csv_reader = csv.DictReader(csv_file_reader)
             for row in csv_reader:
                 data_json.append(row)
-        with open(data_json_file, mode='w') as json_file_writer:
+        with data_json_file.open(mode='w') as json_file_writer:
             json.dump(data_json, json_file_writer)
 
         # Check suburbs.
@@ -164,7 +175,7 @@ def check_data(logger):
         # Update last run date.
         date_now_dt = datetime.now()
         date_now_str = {"date_last_run": date_now_dt.isoformat()}
-        with open(date_last_run_file, mode='w') as date_last_run_writer:
+        with date_last_run_file.open(mode='w') as date_last_run_writer:
             json.dump(date_now_str, date_last_run_writer)
         logger.debug('All done')
     else:
@@ -176,7 +187,7 @@ def main(freq=0, end=''):
     If ``freq`` is 0 or missing, run once.
     Otherwise, run every ``freq`` minutes until ``end``.
     """
-    logger = start_logs('alert', 28)
+    logger = utils.start_logs('alert', 28)
     if freq==0:
         check_data(logger)
         logging.shutdown()
@@ -184,7 +195,7 @@ def main(freq=0, end=''):
         try:
             def do_check_data():
                 check_data(logger)
-            start_logs('schedule', 7)
+            utils.start_logs('schedule', 7)
             schedule.every(freq).minutes.until(end).do(do_check_data)
             while schedule.next_run():
                 schedule.run_pending()
