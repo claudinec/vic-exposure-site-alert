@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 
 ## [Unreleased]
 
+### Changed
+
+- Update `re.search` for tram routes to match variations in data
+
 ## [0.3.0] - 2021-09-10
 
 ### Added
