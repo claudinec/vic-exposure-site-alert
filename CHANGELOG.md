@@ -6,9 +6,11 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 
 ## [Unreleased]
 
+## [0.3.1] - 2021-09-14
+
 ### Changed
 
-- Update `re.search` for tram routes to match variations in data
+- Update `re.search` for tram routes to match variations in data (closes #9)
 
 ## [0.3.0] - 2021-09-10
 
@@ -59,11 +61,14 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 - Minimal working version
 
 <!-- Links -->
+
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/claudinec/vic-exposure-site-alert/compare/v0.3.0...HEAD
+
+[unreleased]: https://github.com/claudinec/vic-exposure-site-alert/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/claudinec/vic-exposure-site-alert/compare/v0.3.0...v0.3.0
 [0.3.0]: https://github.com/claudinec/vic-exposure-site-alert/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/claudinec/vic-exposure-site-alert/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/claudinec/vic-exposure-site-alert/compare/v0.2.0...v0.2.1
