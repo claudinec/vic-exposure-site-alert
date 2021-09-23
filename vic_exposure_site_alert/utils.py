@@ -20,7 +20,7 @@ def make_dir(dir_name):
     except:
         print((sys.exc_info()[0]))
 
-def start_logs(log_name=__name__, backups=7):
+def start_log(log_name=__name__, backups=7):
     """Start logging."""
     logger_formatter = logging.Formatter('%(asctime)s %(module)s %(funcName)s %(levelname)s %(message)s')
     project_dir = get_project_dir()

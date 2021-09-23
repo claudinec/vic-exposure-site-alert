@@ -183,15 +183,15 @@ def main(freq=0, end=''):
     If ``freq`` is 0 or missing, run once.
     Otherwise, run every ``freq`` minutes until ``end``.
     """
-    logger = utils.start_logs('alert', 28)
+    logger = utils.start_log('alert', 28)
     if freq==0:
         check_data(logger)
         logging.shutdown()
     else:
+        def do_check_data():
+            check_data(logger)
+        utils.start_log('schedule', 7)
         try:
-            def do_check_data():
-                check_data(logger)
-            utils.start_logs('schedule', 7)
             schedule.every(freq).minutes.until(end).do(do_check_data)
             while schedule.next_run():
                 schedule.run_pending()
