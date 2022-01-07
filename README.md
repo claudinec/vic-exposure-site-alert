@@ -1,5 +1,7 @@
 # Filtered Victorian Covid-19 exposure site alerts
 
+ARCHIVED JANUARY 2022 as the Victorian government is no longer updating this list publicly.
+
 Query the Victorian Government Covid-19 exposure site data for chosen suburbs and sends an alert for each new exposure site added via [Pushcut for iOS](https://www.pushcut.io/index.html).
 
 This package provides a command `exposure-alert` that can be run the query once or schedule the query to run at regular intervals until a specified ending time. Alternatively, you can schedule the query to repeat indefinitely by calling `exposure-alert once` from `cron`.
